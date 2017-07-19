@@ -28,6 +28,8 @@
 
 void g510Init(void);
 
+int g510Start(void);
+
 void g510TxCmd(const char* cmd);
 
 int g510PowerOn(void);
@@ -45,6 +47,8 @@ int loadFile(const char* url, char* buf, uint32_t buf_len);
 int getSMS(char* buf, uint32_t max_len);
 
 int sendSMS(char* buf, uint32_t max_len);
+
+int sendText(uint8_t socket, const char* s);
 
 #define APN		"plus"
 #define USER	"plusgsm"
