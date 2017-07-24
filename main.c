@@ -280,86 +280,11 @@ void taskMain(void *params)
 
         xprintf("wakaama has finised\r\n");
     }
-
-
-
-    /*
-    while(1)
-    {
-
-            //xprintf("x");
-            vTaskDelay(500);
-            char key = debug_inkey();
-
-            led1(LED_TOGGLE);
-
-            if(key)
-            {
-                    switch(key)
-                    {
-                            case '0':
-                            case '1':
-                            {
-                                    uint8_t in = key - '0';
-                                    xprintf("siema\nInput %d state = %d\n",in,brdReadOdInput(in));
-                                    break;
-                            }
-                            case 'L':
-                            {
-                                    //g510PowerOn();
-                                    loadFile("http://home.agh.edu.pl/~rabw/comm_test/contents.txt",buf,BUF_SIZE);
-                                    xprintf("buf contents: %s\n",buf);
-                                    //g510PowerOff();
-                                    break;
-                            }
-
-                            case 'x':
-                            {
-                                    g510PowerOn();
-                                    xprintf("started\n");
-                                    break;
-                            }
-
-                            case 'y':
-                            {
-                                    getSMS(buf,BUF_SIZE);
-                                    xprintf("buf contents: %s\n",buf);
-                                    break;
-                            }
-
-                            case 'z':
-                            {
-                                    g510PowerOff();
-                                    xprintf("stopped\n");
-                                    break;
-                            }
-
-                            case 'r':
-                            {
-                                    xprintf("%d\n", g510_socket());
-                                    //g510_getIP();
-                                    break;
-                            }
-                            case 'f':
-                            {
-                                    uint8_t buf[] = {1, 2, 3, 4, 5, 6, 7, 8};
-                                    FLASH_Status res = flash_program(FLASH_SECTOR_3_ADDR, buf,  8);
-                                    xprintf("%d\n", res);
-                                    break;
-                            }
-                            default:
-                                    xprintf("nie rozpoznane polecenie\n");
-                                    break;
-                    }
-            }
-    }
-     * */
     
     g510_closeSocket(socket);
     closeConn();
     g510PowerOff();
     
-
 }
 
 
