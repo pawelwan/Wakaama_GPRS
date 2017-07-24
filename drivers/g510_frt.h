@@ -24,7 +24,8 @@
 #define __G510_FRT_H__
 
 #define G510_USART		3
-
+#define G510_RESPONSE_TIMEOUT   30000
+#define G510_REGISTER_TIMEOUT   300
 
 void g510Init(void);
 
@@ -47,8 +48,6 @@ int loadFile(const char* url, char* buf, uint32_t buf_len);
 int getSMS(char* buf, uint32_t max_len);
 
 int sendSMS(char* buf, uint32_t max_len);
-
-int sendText(uint8_t socket, const char* s);
 
 #define APN		"plus"
 #define USER	"plusgsm"

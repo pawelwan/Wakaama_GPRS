@@ -2,7 +2,6 @@
 #define _PLATFORM_TIME_H_
 
 #include <stdlib.h>
-#include "lwip/sockets.h" // for timeval
 
 /* In our STM we dont have real time clock so we need to use own versions of 
  * time functions, this includes time() and gettimeofday(),
@@ -16,8 +15,16 @@
  * we need also time_t which we put here
  */
 #ifndef _SYS__TIMEVAL_H_ 
+#define _SYS__TIMEVAL_H_
     #define time_t long
     typedef long time_t;
+#endif
+#ifndef _TIMEVAL_DEFINED
+#define _TIMEVAL_DEFINED
+    struct timeval {
+        long    tv_sec;         /* seconds */
+        long    tv_usec;        /* and microseconds */
+    };
 #endif
 
 #if TIMEINTERCEPT

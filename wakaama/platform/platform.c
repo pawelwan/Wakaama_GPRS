@@ -26,18 +26,18 @@
 
 void * lwm2m_malloc(size_t s)
 {
-    return mem_malloc(s);
+    return malloc(s);
 }
 
 void lwm2m_free(void * p)
 {
-    return mem_free(p);
+    return free(p);
 }
 
 char * lwm2m_strdup(const char * str)
 {
     //return strdup(str); // doesnt work
-    char* np = (char*)mem_malloc(strlen(str)+1);
+    char* np = malloc(strlen(str)+1);
     return np ? strcpy(np, str) : np;
 }
 

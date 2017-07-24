@@ -41,6 +41,7 @@
  */
 
 #include "liblwm2m.h"
+#include "config_client.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -208,10 +209,13 @@ lwm2m_object_t * get_object_security()
             lwm2m_free(securityObj);
             return NULL;
         }
+        
+        char buff[100];
+        sprintf(buff,"coap://%s:%s",SERVER_IP_STR, SERVER_PORT_STR);
 
         memset(targetP, 0, sizeof(security_instance_t));
         targetP->instanceId = 0;
-        targetP->uri = lwm2m_strdup("coap://\" "SERVER_IP" \":\" "SERVER_PORT");
+        targetP->uri = lwm2m_strdup(buff);
         targetP->isBootstrap = false;
         targetP->shortID = 123;
         targetP->clientHoldOffTime = 10;

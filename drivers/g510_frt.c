@@ -28,7 +28,6 @@
 
 
 
-
 int g510WaitForResponse(const char* response, uint32_t timeout)
 {
 	uint8_t key;
@@ -249,59 +248,6 @@ void txBinData(const uint8_t* data, uint16_t len)
 	}*/
 }
 
-
-int sendText(uint8_t socket, const char* s){ // may need adding mippush
-    xprintf("%c send: %s\n", socket, s);
-
-    char cmdBuf[20];
-
-    sprintf(cmdBuf,"AT+MIPSEND=%d,\"",socket);
-
-    int len = strlen(cmdBuf);
-
-    usart_txBuf(G510_USART,(uint8_t*)cmdBuf,len);
-
-    len = strlen(s);
-
-    //xprintf("tcpTx: len=%d\n",len);
-
-    //the data to tx:
-    txBinData((const uint8_t*)s,len);
-
-    strcpy(cmdBuf,"\"\r\n");
-    usart_txBuf(G510_USART,(uint8_t*)cmdBuf,3);
-
-    if(g510WaitForResponse("+MIPSEND",10000)) return -1;
-
-    return 0;
-}
-
-uint32_t readUDPText(const char* s, char socket){ // type = 1 = tcp
-    
-    char cmdBuf[50];
-    sprintf(cmdBuf,"+MIPRTCP:%c,socket);
-
-
-
-    int len = strlen(cmdBuf);
-
-    usart_txBuf(G510_USART,(uint8_t*)cmdBuf,len);
-
-    len = strlen(s);
-
-    //xprintf("tcpTx: len=%d\n",len);
-
-    //the data to tx:
-    txBinData((const uint8_t*)s,len);
-
-    strcpy(cmdBuf,"\"\r\n");
-    usart_txBuf(G510_USART,(uint8_t*)cmdBuf,3);
-
-    if(g510WaitForResponse("+MIPSEND",10000)) return -1;
-
-    return 0;
-}
-
 int g510RxBinByte(uint8_t *b)
 {
 	int res = 0;
@@ -333,10 +279,10 @@ int g510Creg(void){
     
     char buf[50];
 
-    g510FlushRx(void);
+    g510FlushRx();
     g510TxCmd("AT+CREG?\r");
 
-    g510ReadResp(buf,50,10000);
+    g510ReadResp(buf,50,G510_RESPONSE_TIMEOUT);
 
     //xprintf("CREG response: %s\n",buf);
 
@@ -351,16 +297,26 @@ int g510Cgatt(void){
     
     char buf[50];
 
-    g510FlushRx(void);
+    g510FlushRx();
     g510TxCmd("AT+CGATT?\r");
 
-    g510ReadResp(buf,50,10000);
+    g510ReadResp(buf,50,G510_RESPONSE_TIMEOUT);
 
     char* ptr = strchr(buf,':');
 
     ptr++;
 
     return *ptr - '0';
+}
+
+int g510Gtset(void){
+    
+    g510FlushRx();
+    g510TxCmd("AT+gtset=IPRFMT,5\r");
+
+    if(g510WaitForResponse("OK",G510_RESPONSE_TIMEOUT)) return -1;
+
+    return 0;
 }
 
 
@@ -682,25 +638,33 @@ int g510_Mipcall(void){
 }
 
 int g510Start(void){    
-    int result = g510PowerOn(void);
+    int result = g510PowerOn();
     if(result){
         xprintf("g510PowerOn error: %d", result);
         return -1;
     }
-    result = g510Creg(void);
+    result = g510Creg();
     if(result != 1 && result != 5){ 
         xprintf("g510Creg error: %d, device not registered\n", result);
         return -2; 
     }
-    result = g510Cgatt(void);
+    result = g510Cgatt();
     if(result == 0){ 
         xprintf("g510Cgatt error: %d, device not attached\n", result);
         return -3; 
     }
-    result = g510_Mipcall(void);
+    /*
+    result = g510Gtset(void);
+    if(result){
+        xprintf("g510Gtset error: %d, cannot set cache mode\n", result);
+        return -4;
+    } 
+    */   
+    
+    result = g510_Mipcall();
     if(result){
         xprintf("g510Mipcall error: %d, device cannot connect\n", result);
-        return -4;
+        return -5;
     }
     return 0;
 }

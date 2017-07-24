@@ -1,4 +1,5 @@
 # Define programs and commands
+CCC	  = "C:\MinGW\bin\gcc"
 TOOLCHAIN = arm-none-eabi
 CC        = $(TOOLCHAIN)-gcc
 OBJCOPY   = $(TOOLCHAIN)-objcopy
@@ -16,6 +17,51 @@ CHIP = STM32F429_439xx
 
 # Define all C source files (dependencies are generated automatically)
 #
+
+WAKAAMA_INC += -I wakaama
+WAKAAMA_INC += -I wakaama/er-coap-13
+WAKAAMA_INC += -I wakaama/platform
+WAKAAMA_INC += -I wakaama/client
+WAKAAMA_INC += -I wakaama/client/firmware
+WAKAAMA_INC += -I wakaama/client/objects
+
+WAKAAMA_SRC += wakaama/liblwm2m.c
+WAKAAMA_SRC += wakaama/objects.c
+WAKAAMA_SRC += wakaama/utils.c
+WAKAAMA_SRC += wakaama/uri.c
+WAKAAMA_SRC += wakaama/tlv.c
+WAKAAMA_SRC += wakaama/data.c
+WAKAAMA_SRC += wakaama/list.c
+WAKAAMA_SRC += wakaama/packet.c
+WAKAAMA_SRC += wakaama/transaction.c
+WAKAAMA_SRC += wakaama/registration.c
+WAKAAMA_SRC += wakaama/bootstrap.c
+WAKAAMA_SRC += wakaama/management.c
+WAKAAMA_SRC += wakaama/observe.c
+WAKAAMA_SRC += wakaama/json.c
+WAKAAMA_SRC += wakaama/discover.c
+WAKAAMA_SRC += wakaama/block1.c
+WAKAAMA_SRC += wakaama/er-coap-13/er-coap-13.c
+
+WAKAAMA_SYMBOL += -DLWM2M_LITTLE_ENDIAN
+WAKAAMA_SYMBOL += -DLWM2M_CLIENT_MODE
+WAKAAMA_SYMBOL += -DLWM2M_WITH_LOGS  # LOGS
+#WAKAAMA_SYMBOL += -DCOAPLOG # download logs
+
+WAKAAMA_OBJECT_SRC += wakaama/client/objects/object_device.c
+WAKAAMA_OBJECT_SRC += wakaama/client/objects/object_security.c
+WAKAAMA_OBJECT_SRC += wakaama/client/objects/object_server.c
+WAKAAMA_OBJECT_SRC += wakaama/client/objects/object_firmware.c
+WAKAAMA_OBJECT_SRC += wakaama/client/objects/object_test.c
+
+WAKAAMA_ADDON_SRC += wakaama/client/connection.c
+WAKAAMA_ADDON_SRC += wakaama/platform/platform.c
+WAKAAMA_ADDON_SRC += wakaama/platform/platformtime.c
+WAKAAMA_ADDON_SRC += wakaama/client/firmware/firmware_update.c
+WAKAAMA_ADDON_SRC += wakaama/client/firmware/crc32.c
+
+CHECKSUM_SRC += wakaama/client/firmware/gen_header.c
+
 SOURCES += main.c
 
 SOURCES += drivers/board.c
@@ -75,6 +121,10 @@ SOURCES += libs/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_tim.c
 SOURCES += libs/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_usart.c
 SOURCES += libs/STM32F4xx_StdPeriph_Driver/src/stm32f4xx_wwdg.c
 
+SOURCES += $(WAKAAMA_SRC)
+SOURCES += $(WAKAAMA_OBJECT_SRC)
+SOURCES += $(WAKAAMA_ADDON_SRC)
+
 OBJECTS  = $(addprefix $(OBJDIR)/,$(addsuffix .o,$(basename $(SOURCES))))
 
 # Place -D, -U or -I options here for C and C++ sources
@@ -88,6 +138,8 @@ CPPFLAGS += -Ilibs/Device/STM32F4xx/Include
 CPPFLAGS += -Ilibs/STM32F4xx_StdPeriph_Driver/inc
 CPPFLAGS += -D$(CHIP)
 CPPFLAGS += -DFREERTOS
+CPPFLAGS += $(WAKAAMA_INC)
+CPPFLAGS += $(WAKAAMA_SYMBOL)
 
 #---------------- Compiler Options C ----------------
 #  -g*:          generate debugging information
@@ -145,7 +197,7 @@ ASFLAGS  += $(CPU)
 LDFLAGS  += $(CPU)
 
 # Default target.
-all:  gccversion build showsize
+all:  gccversion build checksum showsize
 
 build: elf hex bin
 
@@ -156,6 +208,22 @@ bin: $(TARGET).bin
 # Display compiler version information
 gccversion:
 	@$(CC) --version
+	
+# generate file for checksum
+gen_header: $(CHECKSUM_SRC)
+	@echo
+	@echo compiling checksum programs
+	$(CCC) -std=gnu99 -c $(CHECKSUM_SRC) -o gen_header.o
+	$(CCC) -std=gnu99 gen_header.o -o gen_header
+
+# calc checksum and add header to binfile
+checksum: gen_header
+	@echo
+	@echo generating header: $<
+	gen_header $(TARGET).bin 0x0 0xabcd1234 1
+#gen_header $(TARGET).bin 0x1 0xdeadbeef 0 # create update
+	@echo adding header: $<
+	srec_cat ${CURDIR}/$(OBJDIR)/firmware_header.bin -binary ${CURDIR}/$(TARGET).bin -binary -offset 0x18 -o ${CURDIR}/$(OBJDIR)/firmware.bin -binary
 
 # Show the final program size
 showsize: elf
@@ -212,6 +280,10 @@ $(shell mkdir -p $(OBJDIR)/fatfs 2>/dev/null)
 $(shell mkdir -p $(OBJDIR)/FreeRTOS/Source/ 2>/dev/null)
 $(shell mkdir -p $(OBJDIR)/FreeRTOS/Source/portable/GCC/ARM_CM4F 2>/dev/null)
 $(shell mkdir -p $(OBJDIR)/libs/STM32F4xx_StdPeriph_Driver/src 2>/dev/null)
+$(shell mkdir -p $(OBJDIR)/wakaama/er-coap-13 2>/dev/null)
+$(shell mkdir -p $(OBJDIR)/wakaama/platform 2>/dev/null)
+$(shell mkdir -p $(OBJDIR)/wakaama/client/firmware 2>/dev/null)
+$(shell mkdir -p $(OBJDIR)/wakaama/client/objects 2>/dev/null)
 
 # Include the dependency files
 -include $(wildcard $(OBJDIR)/*.d)
