@@ -11,7 +11,7 @@
 #define SERVER_IP_STR STR(192.168.0.50)
 #define SERVER_PORT 5683
 #define SERVER_PORT_STR STR(5683)
-#define SELECT_TIMEOUT 500 // tics
+#define SELECT_TIMEOUT 500 // miliseconds
 #define NOTIFY_TIMEOUT 10000 // miliseconds
 #define DEVICE_NAME "Engineer Project Device"
 #define OBJ_COUNT 5

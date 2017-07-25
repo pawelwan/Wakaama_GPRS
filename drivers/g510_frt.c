@@ -652,14 +652,7 @@ int g510Start(void){
     if(result == 0){ 
         xprintf("g510Cgatt error: %d, device not attached\n", result);
         return -3; 
-    }
-    /*
-    result = g510Gtset(void);
-    if(result){
-        xprintf("g510Gtset error: %d, cannot set cache mode\n", result);
-        return -4;
     } 
-    */   
     
     result = g510_Mipcall();
     if(result){

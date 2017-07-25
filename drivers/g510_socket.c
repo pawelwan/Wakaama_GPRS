@@ -97,20 +97,6 @@ uint32_t g510_sendPacket(char socket, const char* s, size_t length){
     
     return length;
 }
-/* // is this working just for sending packets? if for received too then its so usefull
-uint32_t g510_read(const char* packet, char socket){
-    
-    char buff[50];
-    
-    g510FlushRx();
-    g510TxCmd("AT+MIPREAD?");
-    
-    if(g510ReadResp(buff, sizeof(buff), G510_RESPONSE_TIMEOUT)){
-        sscanf(buff ,"+MIPREAD:%c，%d", )
-    }    
-    
-}
-*/
 
 static uint32_t hexStringToBin(char * buff, char * string, size_t size){
     
@@ -133,12 +119,12 @@ static uint32_t hexStringToBin(char * buff, char * string, size_t size){
     return count;
 }
 
-uint32_t g510_udpRead(char* packet, char socket, const char * adress, const char* port){
+uint32_t g510_udpRead(char *packet, char socket, const char *adress, const char *port){
     
     char buff[PACKET_SIZE * 2];
     char recv_addr[16];
-    char * offset;
-    char * step;
+    char *offset;
+    char *step;
     uint32_t len;
     
     if(g510ReadResp(buff, sizeof(buff), G510_RESPONSE_TIMEOUT)){
