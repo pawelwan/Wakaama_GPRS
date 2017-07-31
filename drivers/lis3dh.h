@@ -1,8 +1,6 @@
 #ifndef __LIS3DH_H
 #define __LIS3DH_H
 
-#include "stm32f4xx.h"
-
 typedef enum {
     LIS3DH_SCALE_16G =  0b11,
     LIS3DH_SCALE_8G =   0b10,

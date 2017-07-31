@@ -1,4 +1,5 @@
 #include "state_machine.h"
+#include "queue.h"
 
 #define TMP_SIZE 10
 #define QUEUE_SIZE 200
@@ -45,15 +46,15 @@ uint8_t queues_init() {
     return 1;
 }
 
-BaseType_t receive_from_rx(uint8_t *key, TickType_t timeout) {
+BaseType_t receive_from_rx(char *key, TickType_t timeout) {
     return xQueueReceive(rx_queue, key, timeout);
 }
 
-BaseType_t receive_from_udp(uint8_t *key, TickType_t timeout) {
+BaseType_t receive_from_udp(char *key, TickType_t timeout) {
     return xQueueReceive(udp_queue, key, timeout);
 }
 
-BaseType_t receive_from_tcp(uint8_t *key, TickType_t timeout) {
+BaseType_t receive_from_tcp(char *key, TickType_t timeout) {
     return xQueueReceive(tcp_queue, key, timeout);
 }
 

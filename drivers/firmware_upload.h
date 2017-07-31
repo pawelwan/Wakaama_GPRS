@@ -2,6 +2,7 @@
 #define __FIRMWARE_UPLOAD_H
 
 #include "flash.h"
+#include "stm32f4xx.h"
 
 #define APPLICATION_SECTOR      FLASH_SECTOR_8_ADDR
 #define LAST_SECTOR             FLASH_SECTOR_11_ADDR

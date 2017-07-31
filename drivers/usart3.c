@@ -64,7 +64,7 @@ int usart3_chr(char chr) {
 }
 
 int usart3_waitkey(uint8_t *key, portTickType timeout) {
-    if (receive_from_rx(key, timeout) == pdTRUE) {
+    if (receive_from_rx((char *) key, timeout) == pdTRUE) {
         return 1;
     }
     return 0;

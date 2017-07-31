@@ -1,4 +1,3 @@
-#include "common.h"
 #include "firmware_upload.h"
 
 uint32_t current_addr = 0;
@@ -53,8 +52,7 @@ uint8_t check_firmware(uint32_t crc) {
 
     if (calculated_crc == crc) {
         flash_set_flag(BOOT_FLAG, FLAG_SET);
-    }
-    else {
+    } else {
         flash_set_flag(BOOT_FLAG, FLAG_RESET);
     }
 
@@ -77,7 +75,7 @@ static uint32_t crc32(uint8_t *message, uint32_t size) {
     uint32_t byte, crc, mask;
 
     crc = 0xFFFFFFFF;
-    for(uint32_t i = 0; i < size; ++i) {
+    for (uint32_t i = 0; i < size; ++i) {
         byte = message[i];
         crc = crc ^ byte;
         for (int8_t j = 7; j >= 0; --j) {
