@@ -9,6 +9,7 @@
 #include <ctype.h>
 
 #include "firmware_update.h"
+#include "firmware_upload.h"
 #include "wakaama/client/config_client.h"
 #include "wakaama/internals.h"
 
@@ -27,7 +28,7 @@ static void printErrArg(char * error, int arg, coap_packet_t * response){
     lwm2m_free(response->payload);
 }
 
-static int initRequest(coap_packet_t * request, const char * binUri, lwm2m_context_t * ContextP, 
+static int initRequest(coap_packet_t * request, const char * binUri, lwm2m_context_t * ContextP,
         uint32_t block_num, uint16_t block_size){
     //set get packet
     coap_init_message(request, COAP_TYPE_CON, COAP_GET, ContextP->nextMID++);
@@ -46,7 +47,7 @@ static int initRequest(coap_packet_t * request, const char * binUri, lwm2m_conte
 
     //set payload
     coap_set_payload(request, NULL, 0);
-    
+
     #ifdef COAPLOG
     xprintf("Type: %u Mid: [%u], GET, %s, 2:%d/%u/%u \r\n",
     request->type, request->mid, request->uri_path->data,
@@ -70,17 +71,17 @@ int downloadFirmware(const char * uri, lwm2m_context_t * ContextP){
 
     static coap_packet_t request[1];
     static coap_packet_t response[1];
-    
+
     const char * binUri = (strrchr(uri,'/'));
     binUri++;
-    
-    fprintf(stdout, "\r\n\t DOWNLOADING UPDATE\r\n");          
-    
+
+    fprintf(stdout, "\r\n\t DOWNLOADING UPDATE\r\n");
+
     while(1){
-        
+
         //clean mail box
         while(g510_udpRead(responseBuffer, dataP->sock, SERVER_IP_STR, SERVER_PORT_STR));
-        
+
         coap_status_t coap_error_code = NO_ERROR;
         //prepare request
         if(initRequest(request, binUri, ContextP, block_num, block_size) != 0){
@@ -94,29 +95,29 @@ int downloadFirmware(const char * uri, lwm2m_context_t * ContextP){
             printErrArg("message_send", coap_error_code, response);
             return -1;
         }
-        
+
         /*##################################################################*/
         /*                            RECEIVE PACKET                        */
         /*##################################################################*/
         int i = 5;
         int numBytes;
-        
+
         while(i > 0){
-           
+
             numBytes = g510_udpRead(responseBuffer, dataP->sock, SERVER_IP_STR, SERVER_PORT_STR);
-            
+
             if (numBytes == 0) { // connections are dirty a little bit fix it later
                 vTaskDelay(COAP_RESPONSE_TIMEOUT); // nothing to read -> sleep some time
                 continue;
-            } 
+            }
             else if (0 < numBytes) { // msg from server
-                
+
                 connection_t * connP;
                 connP = connection_find(dataP->connList, SERVER_IP_STR, SERVER_PORT_STR);
                 if (connP != NULL) {
-                    break;                  
-                }             
-            } 
+                    break;
+                }
+            }
             else{ // packet from different source, reject
                 fprintf(stderr, "received bytes ignored!\r\n");
                 continue;
@@ -124,7 +125,7 @@ int downloadFirmware(const char * uri, lwm2m_context_t * ContextP){
             i--;
         }
         if(i == 0){
-        
+
             retrys++;
             if(retrys > 5){
                 printErr("server is not responding",  response);
@@ -133,11 +134,11 @@ int downloadFirmware(const char * uri, lwm2m_context_t * ContextP){
             xprintf("\t RETRY DOWNLOADING\r\n");
             continue;
         }
-                  
+
         uint32_t block2_num = 0;
         uint16_t block2_size = REST_MAX_CHUNK_SIZE;
         uint8_t block2_more = 0;
-        //check if response is correct 
+        //check if response is correct
         coap_error_code = coap_parse_message(response, responseBuffer, (uint16_t)numBytes);
         if (coap_error_code != COAP_IGNORE && coap_error_code != 0){
             retrys++;
@@ -152,7 +153,7 @@ int downloadFirmware(const char * uri, lwm2m_context_t * ContextP){
         xprintf("Type: %u Mid: [%u], 2.05 content, 2:%d/%u/%u \r\n",
         response->type, response->mid,
         response->block2_num, response->block2_more, response->block2_size);
-        #endif                
+        #endif
         //setup for next request
         if (coap_get_header_block2(response, &block2_num, &block2_more, &block2_size, NULL)){
             block_size = MIN(block2_size, REST_MAX_CHUNK_SIZE);
@@ -234,5 +235,5 @@ int downloadFirmware(const char * uri, lwm2m_context_t * ContextP){
         }
         retrys = 0;
     }
-    return 0;  
+    return 0;
 }

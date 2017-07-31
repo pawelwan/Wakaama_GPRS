@@ -1,9 +1,8 @@
-#include "common.h"
 #include "flash.h"
 
 static uint32_t flash_get_sector(uint32_t);
 
-FLASH_Status flash_erase(uint32_t start_addr, uint32_t size) {
+uint8_t flash_clear_sector(uint32_t addr) {
     //unlock the FLASH control register access
     FLASH_Unlock();
 
@@ -11,49 +10,67 @@ FLASH_Status flash_erase(uint32_t start_addr, uint32_t size) {
     FLASH_ClearFlag(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR |
                     FLASH_FLAG_PGAERR | FLASH_FLAG_PGPERR | FLASH_FLAG_PGSERR);
 
-    uint32_t start_sector = flash_get_sector(start_addr);
-    uint32_t end_sector = flash_get_sector(start_addr + size);
+    uint32_t sector = flash_get_sector(addr);
 
-    uint32_t current_sector;
+    //VoltageRange_3 - operation will be done by word (32-bit)
+    FLASH_Status res = FLASH_EraseSector(sector, VoltageRange_3);
 
-    for (current_sector = start_sector; current_sector <= end_sector; current_sector += 8) {
-        //VoltageRange_3 - operation will be done by word (32-bit)
-        FLASH_Status res = FLASH_EraseSector(current_sector, VoltageRange_3);
-        if (res != FLASH_COMPLETE) return res;
-    }
     //lock the FLASH control register access
     FLASH_Lock();
 
-    return FLASH_COMPLETE;
+    return 1 ? (res == FLASH_COMPLETE) : 0;
 }
 
-FLASH_Status flash_program(uint32_t start_addr, void* data, uint32_t size) {
-    FLASH_Status res = flash_erase(start_addr, size);
-    if (res != FLASH_COMPLETE) return res;
-
-    uint32_t* buffer = (uint32_t*) data;
-    uint32_t buffer_size = (size / 4);
-
+uint32_t flash_program_by_word(uint32_t addr, uint32_t *data, uint32_t size) {
+    FLASH_Status res;
     FLASH_Unlock();
 
-    uint32_t i;
-    uint32_t current_addr;
-    for (i = 0; i < buffer_size; ++i) {
-        current_addr = start_addr + 4 * i;
-        res = FLASH_ProgramWord(current_addr, buffer[i]);
-        if (res != FLASH_COMPLETE) return res;
-    }
-
-    uint8_t* buf = (uint8_t*) data;
-    for(i = 0; i < (size % 4); ++i){
-        current_addr = start_addr + 4 * buffer_size + i;
-        res = FLASH_ProgramByte(current_addr, buf[4 * buffer_size + i]);
-        if (res != FLASH_COMPLETE) return res;
+    for (uint32_t i = 0; i < size; ++i) {
+        res = FLASH_ProgramWord(addr, data[i]);
+        if (res != FLASH_COMPLETE) {
+            FLASH_Lock();
+            return 0;
+        }
+        addr += 4;
     }
 
     FLASH_Lock();
+    return addr;
+}
 
-    return FLASH_COMPLETE;
+uint32_t flash_program_by_byte(uint32_t addr, uint8_t *data, uint32_t size) {
+    FLASH_Status res;
+    FLASH_Unlock();
+
+    for (uint32_t i = 0; i < size; ++i) {
+        res = FLASH_ProgramByte(addr, data[i]);
+        if (res != FLASH_COMPLETE) {
+            FLASH_Lock();
+            return 0;
+        }
+        addr += 4;
+    }
+
+    FLASH_Lock();
+    return addr;
+}
+
+FLASH_Status flash_set_flag(flag_type flag, flag_state state) {
+    FLASH_Unlock();
+    FLASH_Status res = FLASH_ProgramWord((uint32_t) flag, (uint32_t) state);
+    FLASH_Lock();
+
+    return res;
+}
+
+flag_state flash_get_flag(flag_type flag) {
+    flag_state state = *((flag_state *) flag);
+
+    if (state != FLAG_SET || state != FLAG_RESET) {
+        state = FLAG_ERROR;
+    }
+
+    return state;
 }
 
 static uint32_t flash_get_sector(uint32_t addr) {

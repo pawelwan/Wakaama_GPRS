@@ -72,6 +72,8 @@ SOURCES += drivers/g510_frt.c
 SOURCES += drivers/g510_socket.c
 SOURCES += drivers/lis3dh.c
 SOURCES += drivers/flash.c
+SOURCES += drivers/state_machine.c
+SOURCES += drivers/firmware_upload.c
 SOURCES += drivers/sd/sd.c drivers/sd/stm32f4_sdio_sd.c
 
 SOURCES += sys/ustime.c
@@ -208,7 +210,7 @@ bin: $(TARGET).bin
 # Display compiler version information
 gccversion:
 	@$(CC) --version
-	
+
 # generate file for checksum
 gen_header: $(CHECKSUM_SRC)
 	@echo
